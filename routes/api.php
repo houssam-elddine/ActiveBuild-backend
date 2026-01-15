@@ -14,9 +14,11 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('devis/{devisId}/commande', [CommandeController::class, 'store']);
 Route::post('commande/{commandeId}/bon-fabrication', [BonFabricationController::class, 'store']);
 Route::apiResource('clients', ClientController::class);
+
 Route::apiResource('devis', DevisController::class)->only([
     'index', 'store', 'show'
 ]);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('produits', ProduitController::class);
