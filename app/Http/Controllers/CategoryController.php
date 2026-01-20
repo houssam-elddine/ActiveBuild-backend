@@ -27,11 +27,17 @@ class CategoryController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'nom' => 'required|string|unique:categories,nom'
+                'nom' => 'required|string|unique:categories,nom',
+                'img' => 'required|image : jpg,png,jpeg,gif,svg|max:80480',
+                'description' => 'nullable|string'
             ],
             [
+                'img.required' => 'L\'image de la catégorie est obligatoire.',
+                'img.image' => 'Le fichier doit être une image valide.',
+                'img.max' => 'L\'image ne doit pas dépasser 80480 Ko.',
                 'nom.required' => 'Le nom de la catégorie est obligatoire.',
-                'nom.unique' => 'Cette catégorie existe déjà.'
+                'nom.unique' => 'Cette catégorie existe déjà.',
+                'description.string' => 'La description doit être une chaîne de caractères.'
             ]
         );
 
@@ -41,9 +47,17 @@ class CategoryController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
+        $img = $validator['img'];
+        $imgName = time().'.'.$img->getClientOriginalExtension();
+        $img->move(public_path('images/categories'), $imgName);
+
+        $imagePath = 'images/categories/' . $imgName;
+        
 
         $category = Category::create([
-            'nom' => $request->nom
+            'img' => $imagePath,
+            'nom' => $request->nom,
+            'description' => $request->description
         ]);
 
         return response()->json([
@@ -71,11 +85,16 @@ class CategoryController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'nom' => 'required|string|unique:categories,nom,' . $category->id
+                'img' => 'sometimes|image : jpg,png,jpeg,gif,svg|max:80480',
+                'nom' => 'sometimes|string|unique:categories,nom,' . $category->id,
+                'description' => 'sometimes|string'
+
             ],
             [
-                'nom.required' => 'Le nom de la catégorie est obligatoire.',
-                'nom.unique' => 'Ce nom de catégorie existe déjà.'
+                'img.image' => 'Le fichier doit être une image valide.',
+                'img.max' => 'L\'image ne doit pas dépasser 80480 Ko.',
+                'nom.unique' => 'Ce nom de catégorie existe déjà.',
+                'description.string' => 'La description doit être une chaîne de caractères.'
             ]
         );
 
@@ -84,6 +103,17 @@ class CategoryController extends Controller
                 'message' => 'Erreur de validation',
                 'errors' => $validator->errors()
             ], 422);
+        }
+
+        if ($request->hasFile('img')) {
+            $img = $validator['img'];
+            $imgName = time().'.'.$img->getClientOriginalExtension();
+            $img->move(public_path('images/categories'), $imgName);
+
+            $imagePath = 'images/categories/' . $imgName;
+            $category->update([
+                'img' => $imagePath
+            ]);
         }
 
         $category->update([

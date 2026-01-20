@@ -30,6 +30,7 @@ class ProduitController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
+                'img' => 'required|image : jpg,png,jpeg,gif,svg|max:80480',
                 'categorie_id' => 'required|exists:categories,id',
                 'nom' => 'required|string',
                 'description' => 'nullable|string',
@@ -50,6 +51,9 @@ class ProduitController extends Controller
                 'compatibilite' => 'required_if:type,Accessoire|string',
             ],
             [
+                'img.required' => 'L\'image du produit est obligatoire.',
+                'img.image' => 'Le fichier doit être une image valide.',
+                'img.max' => 'L\'image ne doit pas dépasser 80480 Ko.',
                 'categorie_id.required' => 'La catégorie est obligatoire.',
                 'categorie_id.exists' => 'La catégorie sélectionnée est invalide.',
                 'nom.required' => 'Le nom du produit est obligatoire.',
@@ -76,7 +80,13 @@ class ProduitController extends Controller
             ], 422);
         }
 
-        return DB::transaction(function () use ($request) {
+        $img = $validator['img'];
+        $imgName = time().'.'.$img->getClientOriginalExtension();
+        $img->move(public_path('images/produits'), $imgName);
+
+        $imagePath = 'images/produits/' . $imgName;
+
+        return DB::transaction(function () use ($request, $imagePath) {
 
             $produit = Produit::create([
                 'categorie_id' => $request->categorie_id,
@@ -87,6 +97,7 @@ class ProduitController extends Controller
                 'designation' => $request->designation,
                 'prixUnitaire' => $request->prixUnitaire,
                 'stockDisponible' => $request->stockDisponible,
+                'img' => $imagePath,
             ]);
 
             if ($request->type === 'Profilé') {

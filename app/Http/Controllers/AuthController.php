@@ -8,9 +8,12 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
 
-        if (auth()->attempt($credentials)) {
+        if (auth()->attempt($validated)) {
             $user = auth()->user();
             $token = $user->createToken('token')->plainTextToken;
 
@@ -19,8 +22,7 @@ class AuthController extends Controller
                 'data' => $user,
             ]);
         }
-
-        return response()->json(['message' => 'Unauthorized'], 401);
+        return response()->json(['message' => 'Identifiants invalides'], 401);
     }
 
     public function logout(Request $request)
