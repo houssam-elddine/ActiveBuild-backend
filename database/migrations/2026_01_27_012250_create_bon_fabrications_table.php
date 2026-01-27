@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('accessoires', function (Blueprint $table) {
+        Schema::create('bon_fabrications', function (Blueprint $table) {
             $table->id();
-            $table->string('categorie');
-            $table->string('compatibilite');
-            $table->foreignId('produit_id')
-                  ->constrained('produits')
-                  ->cascadeOnDelete();
+            $table->foreignId('commande_id')->constrained('commandes')->onDelete('cascade');
+            $table->string('etat')->default('en cours');
+            $table->text('etapes')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('accessoires');
+        Schema::dropIfExists('bon_fabrications');
     }
 };

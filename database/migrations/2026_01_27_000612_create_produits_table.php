@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('communes', function (Blueprint $table) {
+        Schema::create('produits', function (Blueprint $table) {
             $table->id();
-            $table->string('nom', 100);
-            $table->foreignId('wilaya_id')
-                  ->constrained('wilayas')
-                  ->cascadeOnDelete();
+            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
+            $table->string('img');
+            $table->string('name');
+            $table->text('description');
+            $table->float('price');
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('commune');
+        Schema::dropIfExists('produits');
     }
 };

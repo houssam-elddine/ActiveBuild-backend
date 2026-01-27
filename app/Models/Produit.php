@@ -7,24 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Produit extends Model
 {
     protected $fillable = [
-        'categorie_id',
-        'nom',
+        'category_id',
+        'img',
+        'name',
         'description',
-        'reference',
-        'type',
-        'designation',
-        'prixUnitaire',
-        'stockDisponible'
+        'price',
     ];
-
-    public function profile()
-    {
-        return $this->hasOne(Profile::class);
-    }
-
-    public function accessoire()
-    {
-        return $this->hasOne(Accessoire::class);
-    }
 }
-

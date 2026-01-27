@@ -2,19 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Commande extends Model
 {
-    use HasFactory;
-
-    protected $fillable = [
-        'numeroCommande',
-        'dateCommande',
-        'statut',
-        'devis_id',
-    ];
+    protected $fillable = ['devis_id', 'status'];
 
     public function devis()
     {

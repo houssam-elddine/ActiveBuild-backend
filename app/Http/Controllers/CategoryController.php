@@ -4,143 +4,87 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends Controller
 {
-    /**
-     * Liste des catégories
-     */
+
     public function index()
     {
+        $categories = Category::all();
         return response()->json([
-            'message' => 'Liste des catégories récupérée avec succès',
-            'data' => Category::with('produits')->get()
-        ], 200);
+            'status' => 200,
+            'categories' => $categories    
+        ],200);
     }
 
-    /**
-     * Création d’une catégorie
-     */
     public function store(Request $request)
     {
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'nom' => 'required|string|unique:categories,nom',
-                'img' => 'required|image : jpg,png,jpeg,gif,svg|max:80480',
-                'description' => 'nullable|string'
-            ],
-            [
-                'img.required' => 'L\'image de la catégorie est obligatoire.',
-                'img.image' => 'Le fichier doit être une image valide.',
-                'img.max' => 'L\'image ne doit pas dépasser 80480 Ko.',
-                'nom.required' => 'Le nom de la catégorie est obligatoire.',
-                'nom.unique' => 'Cette catégorie existe déjà.',
-                'description.string' => 'La description doit être une chaîne de caractères.'
-            ]
-        );
+        $validatedData = $request->validate([
+            'img' => 'required|image|max:20480',
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+        ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Erreur de validation',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-        $img = $validator['img'];
-        $imgName = time().'.'.$img->getClientOriginalExtension();
-        $img->move(public_path('images/categories'), $imgName);
-
-        $imagePath = 'images/categories/' . $imgName;
-        
+        $imagePath = $request->file('img')->store('categories', 'public');
 
         $category = Category::create([
             'img' => $imagePath,
-            'nom' => $request->nom,
-            'description' => $request->description
+            'name' => $validatedData['name'],
+            'description' => $validatedData['description'],
         ]);
 
         return response()->json([
-            'message' => 'Catégorie créée avec succès',
-            'data' => $category
+            'status' => 201,
+            'message' => 'Category created successfully',
+            'category' => $category
         ], 201);
     }
 
-    /**
-     * Afficher une catégorie
-     */
     public function show(Category $category)
     {
         return response()->json([
-            'message' => 'Catégorie récupérée avec succès',
-            'data' => $category->load('produits')
+            'status' => 200,
+            'category' => $category
         ], 200);
     }
 
-    /**
-     * Mise à jour d’une catégorie
-     */
     public function update(Request $request, Category $category)
     {
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'img' => 'sometimes|image : jpg,png,jpeg,gif,svg|max:80480',
-                'nom' => 'sometimes|string|unique:categories,nom,' . $category->id,
-                'description' => 'sometimes|string'
-
-            ],
-            [
-                'img.image' => 'Le fichier doit être une image valide.',
-                'img.max' => 'L\'image ne doit pas dépasser 80480 Ko.',
-                'nom.unique' => 'Ce nom de catégorie existe déjà.',
-                'description.string' => 'La description doit être une chaîne de caractères.'
-            ]
-        );
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Erreur de validation',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        if ($request->hasFile('img')) {
-            $img = $validator['img'];
-            $imgName = time().'.'.$img->getClientOriginalExtension();
-            $img->move(public_path('images/categories'), $imgName);
-
-            $imagePath = 'images/categories/' . $imgName;
-            $category->update([
-                'img' => $imagePath
-            ]);
-        }
-
-        $category->update([
-            'nom' => $request->nom
+        $validatedData = $request->validate([
+            'img' => 'sometimes|image|max:20480',
+            'name' => 'sometimes|string|max:255',
+            'description' => 'sometimes|string',
         ]);
 
+        if ($request->hasFile('img')) {
+            $imagePath = $request->file('img')->store('categories', 'public');
+            $category->img = $imagePath;
+        }
+
+        if (isset($validatedData['name'])) {
+            $category->name = $validatedData['name'];
+        }
+
+        if (isset($validatedData['description'])) {
+            $category->description = $validatedData['description'];
+        }
+
+        $category->save();
+
         return response()->json([
-            'message' => 'Catégorie mise à jour avec succès',
-            'data' => $category
+            'status' => 200,
+            'message' => 'Category updated successfully',
+            'category' => $category
         ], 200);
     }
 
-    /**
-     * Suppression d’une catégorie
-     */
     public function destroy(Category $category)
     {
-        if ($category->produits()->count() > 0) {
-            return response()->json([
-                'message' => 'Impossible de supprimer cette catégorie car elle contient des produits'
-            ], 409);
-        }
-
         $category->delete();
 
         return response()->json([
-            'message' => 'Catégorie supprimée avec succès'
+            'status' => 200,
+            'message' => 'Category deleted successfully'
         ], 200);
     }
 }
